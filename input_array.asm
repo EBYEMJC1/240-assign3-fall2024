@@ -85,11 +85,13 @@ jmp begin_loop
 loop_finished:
 pop rax ; your je loop_finished is above your pop rax pop rax in your loop so the stack still has the two pushes from the start and ever push needs a pop so re-adjust stack 
 pop rax ; re-adjust stack same reason as above for this pop never got to pops in loop so pop here
-
+mov rax, r13 ;return count
 ;mov rax, 0
 ;mov rdi, int_64_bits
 ;mov rsi, [r15]
 ;call printf
+
+
 popf                                                        
 pop        r15                                              
 pop        r14                                              

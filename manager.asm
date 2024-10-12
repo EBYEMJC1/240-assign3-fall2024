@@ -1,8 +1,12 @@
-extern input_array                                              
 global manager
+extern input_array                                              
+extern printf
+
 
 segment .data
 max_array_size equ 832
+int_64_bits db "%ld", 0                               ;general 8-byte float format
+
 
 segment .bss 
 array_of_ints resq max_array_size     
@@ -31,6 +35,12 @@ mov rax, 0
 mov rdi, array_of_ints
 mov rsi, max_array_size
 call input_array
+mov r15, rax ;save array size
+
+mov rax, 0
+mov rdi, int_64_bits
+mov rsi, [array_of_ints]
+call printf
 
 popf                                                        
 pop        r15                                              
