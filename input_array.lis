@@ -1,0 +1,118 @@
+     1                                  ;stolen from https://sites.google.com/a/fullerton.edu/activeprofessor/4-subjects/x86-programming/x86-examples/control-d-example?authuser=0 
+     2                                  global input_array
+     3                                  extern scanf
+     4                                  extern isInteger ;these are function names not file names
+     5                                  extern printf
+     6                                  extern atol
+     7                                  
+     8                                  segment .data
+     9 00000000 256C6400                int_64_bits db "%ld", 0                               ;general 8-byte float format you will not use this
+    10 00000004 257300                  string_format db "%s", 0                              ;string format
+    11 00000007 416E206572726F7220-     invalid_input db "An error was detected.  Re-enter the number", 10, 0
+    11 00000010 776173206465746563-
+    11 00000019 7465642E202052652D-
+    11 00000022 656E74657220746865-
+    11 0000002B 206E756D6265720A00 
+    12                                  
+    13                                  segment .bss 
+    14                                  
+    15                                  segment .text
+    16                                  input_array:                                          
+    17                                  
+    18 00000000 55                      push       rbp                                              
+    19 00000001 4889E5                  mov        rbp, rsp                                         
+    20 00000004 53                      push       rbx                                              
+    21 00000005 51                      push       rcx                                              
+    22 00000006 52                      push       rdx                                              
+    23 00000007 56                      push       rsi                                              
+    24 00000008 57                      push       rdi                                              
+    25 00000009 4150                    push       r8                                               
+    26 0000000B 4151                    push       r9                                               
+    27 0000000D 4152                    push       r10                                              
+    28 0000000F 4153                    push       r11                                              
+    29 00000011 4154                    push       r12                                              
+    30 00000013 4155                    push       r13                                              
+    31 00000015 4156                    push       r14                                              
+    32 00000017 4157                    push       r15                                              
+    33 00000019 9C                      pushf                                                       
+    34                                  
+    35                                  ;save parameters 
+    36 0000001A 4989FF                  mov r15, rdi ;address of array
+    37 0000001D 4989F6                  mov r14, rsi ;max arrray size
+    38 00000020 4D31ED                  xor r13, r13 ;counter
+    39                                  
+    40                                  ;===== Loop to input floating point numbers until Control+D =======================================================================
+    41                                  begin_loop:
+    42                                  
+    43 00000023 6A00                    push qword 0 ;make room on stack for one 64 bit number but not 16 bit aligned so push again
+    44 00000025 6A00                    push qword 0 ;16 bit aligned and make room on stack
+    45                                  
+    46 00000027 B800000000              mov qword  rax, 0                                           ;SSE is not involved in this scanf operation
+    47 0000002C 48BF-                   mov        rdi, string_format                               ;"%s"
+    47 0000002E [0400000000000000] 
+    48 00000036 4889E6                  mov        rsi, rsp                                         ;Give scanf a pointer to the reserved storage
+    49 00000039 E8(00000000)            call       scanf                                            ;Call a library function to do the input work
+    50                                  
+    51 0000003E 4898                    cdqe                                                        ;Sign extend the integer in eax to all of rax     |
+    52 00000040 4883F8FF                cmp        rax, -1                                          ;Compare rax with -1
+    53 00000044 744D                    je         loop_finished                                    ;if rax == -1 then exit from the loop
+    54                                  
+    55 00000046 4889E7                  mov rdi, rsp                                                ; current input if not ctrl d belongs to where rsp is pointing
+    56 00000049 E8(00000000)            call isInteger                                             ; is_integer is derived from isfloat
+    57 0000004E 4883F800                cmp rax, 0                                                  ;is_integer makes it so if the input is not an iteger then it will return 0 and returns are in rax if not a float derived from profs isfloat and stolen from Jukey on discord
+    58 00000052 741D                    je try_again
+    59                                  
+    60 00000054 B800000000              mov rax, 0
+    61 00000059 4889E7                  mov rdi, rsp
+    62 0000005C E8(00000000)            call atol
+    63 00000061 4B8904EF                mov [r15+r13*8], rax
+    64                                  
+    65 00000065 49FFC5                  inc r13
+    66                                  
+    67 00000068 4D39F5                  cmp r13, r14
+    68 0000006B 7F26                    jg loop_finished
+    69                                  
+    70 0000006D 58                      pop rax ; re-adjust stack
+    71 0000006E 58                      pop rax ; re-adjust stack
+    72                                  
+    73 0000006F EBB2                    jmp        begin_loop                                       ;Repeat the loop one more time.
+    74                                  
+    75                                  ;if input is invalid then reset stack by poping rax and printing invalid input then jumping to loop to try to get new input
+    76                                  try_again:
+    77 00000071 58                      pop rax ; your je try_again is above your pop rax pop rax in your loop so the stack still has the two pushes from the start and ever push needs a pop so re-adjust stack 
+    78 00000072 58                      pop rax ; re-adjust stack same reason as above for this pop never got to pops in loop so pop here
+    79 00000073 B800000000              mov rax, 0
+    80 00000078 48BF-                   mov rdi, string_format
+    80 0000007A [0400000000000000] 
+    81 00000082 48BE-                   mov rsi, invalid_input
+    81 00000084 [0700000000000000] 
+    82 0000008C E8(00000000)            call printf
+    83 00000091 EB90                    jmp begin_loop
+    84                                  
+    85                                  loop_finished:
+    86 00000093 58                      pop rax ; your je loop_finished is above your pop rax pop rax in your loop so the stack still has the two pushes from the start and ever push needs a pop so re-adjust stack 
+    87 00000094 58                      pop rax ; re-adjust stack same reason as above for this pop never got to pops in loop so pop here
+    88 00000095 B800000000              mov rax, 0
+    89 0000009A 48BF-                   mov rdi, int_64_bits
+    89 0000009C [0000000000000000] 
+    90 000000A4 498B37                  mov rsi, [r15]
+    91 000000A7 E8(00000000)            call printf
+    92 000000AC 9D                      popf                                                        
+    93 000000AD 415F                    pop        r15                                              
+    94 000000AF 415E                    pop        r14                                              
+    95 000000B1 415D                    pop        r13                                              
+    96 000000B3 415C                    pop        r12                                              
+    97 000000B5 415B                    pop        r11                                              
+    98 000000B7 415A                    pop        r10                                              
+    99 000000B9 4159                    pop        r9                                               
+   100 000000BB 4158                    pop        r8                                               
+   101 000000BD 5F                      pop        rdi                                              
+   102 000000BE 5E                      pop        rsi                                              
+   103 000000BF 5A                      pop        rdx                                              
+   104 000000C0 59                      pop        rcx                                              
+   105 000000C1 5B                      pop        rbx                                              
+   106 000000C2 5D                      pop        rbp                                              
+   107                                  
+   108                                  
+   109 000000C3 C3                      ret                                                         
+   110                                                                                              

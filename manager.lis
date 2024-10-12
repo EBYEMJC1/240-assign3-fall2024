@@ -1,0 +1,54 @@
+     1                                  extern input_array                                              
+     2                                  global manager
+     3                                  
+     4                                  segment .data
+     5                                  max_array_size equ 832
+     6                                  
+     7                                  segment .bss 
+     8 00000000 <res 00001A00>          array_of_ints resq max_array_size     
+     9                                  
+    10                                  segment .text
+    11                                  manager:                                          
+    12                                  
+    13 00000000 55                      push       rbp                                              
+    14 00000001 4889E5                  mov        rbp, rsp                                         
+    15 00000004 53                      push       rbx                                              
+    16 00000005 51                      push       rcx                                              
+    17 00000006 52                      push       rdx                                              
+    18 00000007 56                      push       rsi                                              
+    19 00000008 57                      push       rdi                                              
+    20 00000009 4150                    push       r8                                               
+    21 0000000B 4151                    push       r9                                               
+    22 0000000D 4152                    push       r10                                              
+    23 0000000F 4153                    push       r11                                              
+    24 00000011 4154                    push       r12                                              
+    25 00000013 4155                    push       r13                                              
+    26 00000015 4156                    push       r14                                              
+    27 00000017 4157                    push       r15                                              
+    28 00000019 9C                      pushf                                                       
+    29                                  
+    30 0000001A B800000000              mov rax, 0
+    31 0000001F 48BF-                   mov rdi, array_of_ints
+    31 00000021 [0000000000000000] 
+    32 00000029 BE40030000              mov rsi, max_array_size
+    33 0000002E E8(00000000)            call input_array
+    34                                  
+    35 00000033 9D                      popf                                                        
+    36 00000034 415F                    pop        r15                                              
+    37 00000036 415E                    pop        r14                                              
+    38 00000038 415D                    pop        r13                                              
+    39 0000003A 415C                    pop        r12                                              
+    40 0000003C 415B                    pop        r11                                              
+    41 0000003E 415A                    pop        r10                                              
+    42 00000040 4159                    pop        r9                                               
+    43 00000042 4158                    pop        r8                                               
+    44 00000044 5F                      pop        rdi                                              
+    45 00000045 5E                      pop        rsi                                              
+    46 00000046 5A                      pop        rdx                                              
+    47 00000047 59                      pop        rcx                                              
+    48 00000048 5B                      pop        rbx                                              
+    49 00000049 5D                      pop        rbp                                              
+    50                                  
+    51                                  
+    52 0000004A C3                      ret                                                         
+    53                                                                                              
