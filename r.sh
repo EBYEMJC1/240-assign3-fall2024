@@ -12,11 +12,13 @@ nasm -f elf64 -l input_array.lis -o input_array.o input_array.asm
 echo "Assemble is_integer.asm"
 nasm -f elf64 -l is_integer.lis -o is_integer.o is_integer.asm
 
+g++ -c -m64 -Wall -o sorting.o sorting.cpp -fno-pie -no-pie -std=c++2a
+
 echo "Compile main.c using the gcc compiler standard 20"
 gcc -c -Wall -m64 -no-pie -o main.o main.c -std=c2x
 
 echo "Link the object files using the gcc linker standard 2011"
-gcc -m64 -no-pie -o linked.out manager.o input_array.o is_integer.o  main.o -std=c2x
+g++ -m64 -no-pie -o linked.out manager.o input_array.o is_integer.o sorting.o  main.o -std=c2x
 
 echo "Run the program Floating IO:"
 ./linked.out
