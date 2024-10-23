@@ -1,0 +1,89 @@
+     1                                  ;STOLEN FROM Jukey
+     2                                  global isInteger
+     3                                  extern isdigit
+     4                                  
+     5                                  null equ 0
+     6                                  true equ -1
+     7                                  false equ 0
+     8                                  
+     9                                  segment .data
+    10                                     ;This segment is empty
+    11                                  
+    12                                  segment .bss
+    13                                     ;This segment is empty
+    14                                  
+    15                                  segment .text
+    16                                  isInteger:
+    17                                  
+    18                                  ;Block that backs up almost all GPRs
+    19                                  ;Back up the general purpose registers for the sole purpose of protecting the data of the caller.
+    20 00000000 55                      push rbp                                          ;Backup rbp
+    21 00000001 4889E5                  mov  rbp,rsp                                      ;The base pointer now points to top of stack
+    22 00000004 57                      push rdi                                          ;Backup rdi
+    23 00000005 56                      push rsi                                          ;Backup rsi
+    24 00000006 52                      push rdx                                          ;Backup rdx
+    25 00000007 51                      push rcx                                          ;Backup rcx
+    26 00000008 4150                    push r8                                           ;Backup r8
+    27 0000000A 4151                    push r9                                           ;Backup r9
+    28 0000000C 4152                    push r10                                          ;Backup r10
+    29 0000000E 4153                    push r11                                          ;Backup r11
+    30 00000010 4154                    push r12                                          ;Backup r12
+    31 00000012 4155                    push r13                                          ;Backup r13
+    32 00000014 4156                    push r14                                          ;Backup r14
+    33 00000016 4157                    push r15                                          ;Backup r15
+    34 00000018 53                      push rbx                                          ;Backup rbx
+    35 00000019 9C                      pushf                                             ;Backup rflags
+    36                                  
+    37                                  
+    38                                  ;Make a copy of the passed in array of ascii values
+    39 0000001A 4989FD                  mov r13, rdi                                      ;r13 is the array of char
+    40                                  
+    41                                  ;Let r14 be an index of the array r13.  Initialize to integer 0
+    42 0000001D 4D31F6                  xor r14, r14
+    43                                  
+    44                                  ;Check for leading plus or minus signs
+    45 00000020 41807D002B              cmp byte [r13],'+'
+    46 00000025 7407                    je increment_index
+    47 00000027 41807D002D              cmp byte[r13],'-'
+    48 0000002C 7503                    jne continue_validation
+    49                                  increment_index:
+    50 0000002E 49FFC6                  inc r14
+    51                                  
+    52                                  continue_validation:
+    53                                  
+    54                                  ; Block: loop to validate all digits
+    55                                  loop_digits:
+    56 00000031 B800000000                  mov rax, 0
+    57 00000036 4831FF                      xor rdi, rdi                            ; Zero out rdi
+    58 00000039 438A7C3500                  mov dil, byte [r13 + r14]              ; Get the next character
+    59 0000003E E8(00000000)                call isdigit                           ; Check if it's a digit
+    60 00000043 4883F800                    cmp rax, false                          ; If it's not a digit, return false
+    61 00000047 7414                        je return_false
+    62 00000049 49FFC6                      inc r14                                  ; Move to the next character
+    63 0000004C 43807C350000                cmp byte [r13 + r14], null              ; Check if end of string (null)
+    64 00000052 75DD                        jne loop_digits                          ; Loop if there are more digits
+    65                                  
+    66                                  ; All characters processed and valid
+    67 00000054 48C7C0FFFFFFFF          mov rax, true
+    68 0000005B EB05                    jmp restore_gpr_registers
+    69                                  
+    70                                  return_false:
+    71 0000005D B800000000              mov rax, false
+    72                                  restore_gpr_registers:
+    73 00000062 9D                      popf                                    ;Restore rflags
+    74 00000063 5B                      pop rbx                                 ;Restore rbx
+    75 00000064 415F                    pop r15                                 ;Restore r15
+    76 00000066 415E                    pop r14                                 ;Restore r14
+    77 00000068 415D                    pop r13                                 ;Restore r13
+    78 0000006A 415C                    pop r12                                 ;Restore r12
+    79 0000006C 415B                    pop r11                                 ;Restore r11
+    80 0000006E 415A                    pop r10                                 ;Restore r10
+    81 00000070 4159                    pop r9                                  ;Restore r9
+    82 00000072 4158                    pop r8                                  ;Restore r8
+    83 00000074 59                      pop rcx                                 ;Restore rcx
+    84 00000075 5A                      pop rdx                                 ;Restore rdx
+    85 00000076 5E                      pop rsi                                 ;Restore rsi
+    86 00000077 5F                      pop rdi                                 ;Restore rdi
+    87 00000078 5D                      pop rbp                                 ;Restore rbp
+    88                                  
+    89 00000079 C3                      ret 
