@@ -24,16 +24,16 @@
 ;  Programming languages: The driver is in C and the converstion function is in X86.
 ;  Date program began: 2024 October 30
 ;  Date of last update: 2024 November 3
-;  Files in this program: assign_4.c, sort.c, manager.asm, input_array.asm, output_array.asm, normalize_array.asm, isnan.o, r.sh
+;  Files in this program: assign_4.c, sort.c, manager.asm, input_array.asm, output_array.asm, normalize_array.asm, isnan.asm, r.sh
 ;
 ;Purpose
 ;  Output 3 arrays, a random array, a normalized array, then a sorted normalized array
 ;
 ;This file
-;   File name: isnan.asm
+;   File name: normalize_array.asm
 ;   Language: X86 with Intel syntax
 ;   Max page width: 124 columns
-;   Assemble: nasm -f elf64 -l isnan.lis -o isnan.o isnan.asm
+;   Assemble: nasm -f elf64 -l normalize_array.lis -o normalize_array.o normalize_array.asm
 ;   Link: gcc -m64 -no-pie -o output.out assign_4.o manager.o sort.o input_array.o output_array.o normalize_array.o isnan.o -std=c17
 ;
 ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3
@@ -42,24 +42,30 @@
 
 ;===== Begin code area ================================================================================================
 
+;Declarations
 
-global isnan
+extern printf
+global normalize_array
 
-segment .data                 ;Place initialized data here
+segment .data
 
-segment .bss      ;Declare pointers to un-initialized space in this segment.
+hex_form db "0x%lx", 10, 0
+
+segment .bss
 
 segment .text
-isnan:
 
-;backup GPRs
+;Prolog ===== Insurance for any caller of this assembly module ========================================================
+;Any future program calling this module that the data in the caller's GPRs will not be modified.
+
+normalize_array:
+
 push rbp
-mov rbp, rsp
-push rbx
-push rcx
-push rdx
+mov  rbp,rsp
 push rdi
 push rsi
+push rdx
+push rcx
 push r8
 push r9
 push r10
@@ -68,25 +74,43 @@ push r12
 push r13
 push r14
 push r15
+push rbx
 pushf
 
-;move our number to a non volatile register to check it
-movsd xmm15, xmm0
+; Set max array size, array, counter, and normalized number to compare
+mov     r15, rdi  ;Max array size
+mov     r14, rsi  ;Array
+mov     r13, 0
+mov     r12, 0x3FF0000000000000
 
-;check if number is a nan, if it is: jump to nan, if it is not: move a 1 to rax to return that it is not a nan them jump to exit the function
-ucomisd xmm15, xmm15
-jp nan
-mov rax, 1
-jmp exit
+; Begin loop
+array_loop:
 
-;mov a 0 to rax to return that the number is a nan
-nan:
-mov rax, 0  ;this is a nan
+; Normalize array using shift left, shift right, then or
+mov     rax, 0
+mov     r11, [r14 + r13*8]
+shl     r11, 12
+shr     r11, 12
+or      r11, r12
 
-;exit the function
-exit:
-;Restore GPRs
+; Move number into array
+mov     [r14 + r13 * 8], r11
+
+; Increment
+inc     r13
+
+; If array size is same as max array size, exit loop
+cmp     r13, r15
+jge     out_of_loop
+jmp     array_loop
+
+; Loop exit
+out_of_loop:
+
+
+;===== Restore original values to integer registers ===================================================================
 popf
+pop rbx
 pop r15
 pop r14
 pop r13
@@ -95,11 +119,10 @@ pop r11
 pop r10
 pop r9
 pop r8
+pop rcx
+pop rdx
 pop rsi
 pop rdi
-pop rdx
-pop rcx
-pop rbx
-pop rbp   ;Restore rbp to previous state in stack
+pop rbp
+
 ret
-;End of the function isnan ====================================================================

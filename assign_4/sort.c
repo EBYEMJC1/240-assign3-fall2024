@@ -30,7 +30,7 @@
 // Output 3 arrays, a random array, a normalized array, then a sorted normalized array
 //
 //This file
-//  File name: assign_4.c
+//  File name: sort.c
 //  Language: C with Intel syntax
 //  Max page width: 124 columns
 //  Assemble: gcc -c -m64 -Wall -o sort.o sort.c -fno-pie -no-pie -std=c2x
@@ -42,20 +42,21 @@
 
 // ===== Begin code area ================================================================================================
 
-
+// The C sort function to be used in conjunction with your assembly code
 #include <stdio.h>
 
-extern char* manager();
-
-int main()
-{
-printf("Welcome to Random Products LLC.\n");
-printf("This software is maintained by Damon Cawthon\n");
-
-char* name = manager();
-
-printf("Oh, %s. We hope you enjoyed your arrays. Do come again. A zero will be returned to the operating system.\n", name);
-
- return 0;
-
+void sort(int array_size, double *my_array) {
+    double temp;
+    // Implementing Bubble Sort to arrange the array in ascending order
+    for (int i = 0; i < array_size - 1; i++) {
+        for (int j = 0; j < array_size - i - 1; j++) {
+            // Compare adjacent elements and swap if needed
+            if (my_array[j] > my_array[j + 1]) {
+                // Swap the elements
+                temp = my_array[j];
+                my_array[j] = my_array[j + 1];
+                my_array[j + 1] = temp;
+            }
+        }
+    }
 }

@@ -1,6 +1,6 @@
 ;***********************************************************************************************************************
 ;Program name: "Integer to Binary Conversion.  This program will accept an integer from the keyboard and then display  * 
-;the binary representation of that integer using 64 bits.  Copyright (C) 2023 Floyd Holliday                           *
+;the binary representation of that integer using 64 bits.  Copyright (C) 2024 Damon Cawthon                            *
 ;                                                                                                                      *
 ;This file, itob.asm, is part of the software program "Integer to Binary Conversion".                                  *
 ;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public     *
@@ -16,27 +16,25 @@
 ;=======1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3
 ;
 ;Author information
-;  Author name: Floyd Holliday
-;  Author email: holliday@fullerton.edu
+;  Author name: Damon Cawthon
+;  Author email: dcawthon2242@csu.fullerton.edu
 ;
 ;Program information
-;  Program name: Integer to Binary Conversion
+;  Program name: Random Array Generator
 ;  Programming languages: The driver is in C and the converstion function is in X86.
-;  Date program began: 2023 July 27
-;  Date of last update: 2023 July 30
-;  Files in this program: binarymain.c, itob.asm, r.sh
-;  Status: Conversion to base 2 is finished.
-;  Future: A straight forward extension is to convert an integer to an expression in any base n where 2<=n<=16.
+;  Date program began: 2024 October 30
+;  Date of last update: 2024 November 3
+;  Files in this program: assign_4.c, sort.c, manager.asm, input_array.asm, output_array.asm, normalize_array.asm, isnan.asm, r.sh
 ;
 ;Purpose
-;  Show how to how to make an array, implement iteration, and reject invalid inputs
+;  Output 3 arrays, a random array, a normalized array, then a sorted normalized array
 ;
 ;This file
-;   File name: itob.asm (integer to binary)
+;   File name: input_array.asm
 ;   Language: X86 with Intel syntax
 ;   Max page width: 124 columns
-;   Assemble: nasm -f elf64 -l itob.lis -o itob.o itob.asm
-;   Link: gcc -m64 -no-pie -o bin.out binarymain.o itob.o -std=c17
+;   Assemble: nasm -f elf64 -l input_array.lis -o input_array.o input_array.asm
+;   Link: gcc -m64 -no-pie -o output.out assign_4.o manager.o sort.o input_array.o output_array.o normalize_array.o isnan.o -std=c17
 ;
 ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3
 
@@ -54,7 +52,7 @@ global input_array
 segment .data
 
 error db "The output number was a NaN", 10, 0
-hex_form db "0x%x", 0
+hex_form db "0x%lx", 0
 
 segment .bss
 
@@ -80,38 +78,46 @@ push r15
 push rbx
 pushf
 
+; Set max array size into r15 and Array into r14
 mov     r15, rdi  ;Max array size
 mov     r14, rsi  ;Array
 mov     r13, 0
 
+; Begin loop
 input_loop:
 
+; Put random number into r12
 mov     rax, 0
 rdrand  r12
 
+; Check if nan
 mov     rax, 0
 mov     rdi, r12
 call    isnan
 
+; Exit loop for error message
 cmp     rax, 0
 je      error_message
 
-;cvtsi2sd xmm12, r12
-
+; Add random number to array
 mov   [r14 + r13*8], r12
 
+; Increment
 inc     r13
 
+; Exit loop if array hits max array size
 cmp     r13, r15
-jge     out_of_loop
+je     out_of_loop
 jmp     input_loop
 
+;Error message in case a nan is output
 error_message:
 mov     rax, 0
 mov     rdi, error
 call    printf
 jmp     input_loop
 
+; Exit loop
 out_of_loop:
 
 

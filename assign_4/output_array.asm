@@ -24,16 +24,16 @@
 ;  Programming languages: The driver is in C and the converstion function is in X86.
 ;  Date program began: 2024 October 30
 ;  Date of last update: 2024 November 3
-;  Files in this program: assign_4.c, sort.c, manager.asm, input_array.asm, output_array.asm, normalize_array.asm, isnan.o, r.sh
+;  Files in this program: assign_4.c, sort.c, manager.asm, input_array.asm, output_array.asm, normalize_array.asm, isnan.asm, r.sh
 ;
 ;Purpose
 ;  Output 3 arrays, a random array, a normalized array, then a sorted normalized array
 ;
 ;This file
-;   File name: isnan.asm
+;   File name: output_array.asm
 ;   Language: X86 with Intel syntax
 ;   Max page width: 124 columns
-;   Assemble: nasm -f elf64 -l isnan.lis -o isnan.o isnan.asm
+;   Assemble: nasm -f elf64 -l output_array.lis -o output_array.o output_array.asm
 ;   Link: gcc -m64 -no-pie -o output.out assign_4.o manager.o sort.o input_array.o output_array.o normalize_array.o isnan.o -std=c17
 ;
 ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3
@@ -42,64 +42,78 @@
 
 ;===== Begin code area ================================================================================================
 
+;Declarations
 
-global isnan
+extern printf
+global output_array
 
-segment .data                 ;Place initialized data here
+section .data
+    sci_form db "0x%016lx  %18.13g", 10, 0  ; Format for hexadecimal and scientific notation
 
-segment .bss      ;Declare pointers to un-initialized space in this segment.
+section .text
+output_array:
+    ; Prolog: Save caller's registers
+    push rbp
+    mov  rbp, rsp
+    push rdi
+    push rsi
+    push rdx
+    push rcx
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    push rbx
+    pushf
 
-segment .text
-isnan:
+    mov r15, rdi   ; Max array size
+    mov r14, rsi   ; Array pointer
+    mov r13, 0     ; Counter index
 
-;backup GPRs
-push rbp
-mov rbp, rsp
-push rbx
-push rcx
-push rdx
-push rdi
-push rsi
-push r8
-push r9
-push r10
-push r11
-push r12
-push r13
-push r14
-push r15
-pushf
+;Begin loop
+print_loop:
+    ; Set r12 to point to the current 64-bit element in the array
+    mov r12, r14
+    mov r11, 8        ; Size of double (64 bits)
+    imul r11, r13     ; Offset calculation
+    add r12, r11      ; Update r12 to point to the current element
 
-;move our number to a non volatile register to check it
-movsd xmm15, xmm0
+    ; Load the 64-bit double from memory into an xmm register for printf
+    movq xmm0, [r12]  ; Move the double-precision float into xmm0
 
-;check if number is a nan, if it is: jump to nan, if it is not: move a 1 to rax to return that it is not a nan them jump to exit the function
-ucomisd xmm15, xmm15
-jp nan
-mov rax, 1
-jmp exit
+    ; Print the value using printf with the sci_form format
+    mov rax, 1        ; Number of floating-point arguments in xmm registers
+    mov rdi, sci_form ; Pointer to the format string
+    mov rsi, [r12]    ; Print the value in hex format (as an integer)
+    call printf
 
-;mov a 0 to rax to return that the number is a nan
-nan:
-mov rax, 0  ;this is a nan
+    ; Increment the counter and check if we've reached the end of the array
+    inc r13
+    cmp r13, r15
+    je  out_of_loop   ; Exit loop if done
 
-;exit the function
-exit:
-;Restore GPRs
-popf
-pop r15
-pop r14
-pop r13
-pop r12
-pop r11
-pop r10
-pop r9
-pop r8
-pop rsi
-pop rdi
-pop rdx
-pop rcx
-pop rbx
-pop rbp   ;Restore rbp to previous state in stack
-ret
-;End of the function isnan ====================================================================
+    jmp print_loop
+
+out_of_loop:
+    ; Epilog: Restore caller's registers
+    popf
+    pop rbx
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rcx
+    pop rdx
+    pop rsi
+    pop rdi
+    pop rbp
+
+    ret
